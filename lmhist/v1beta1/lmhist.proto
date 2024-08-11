@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+// Protocol buffer definition for the Language Model History (LMHist) format.
+//
+// LMHist is a specification for encoding conversation histories involving
+// language models. It provides a structured format to represent interactions
+// between humans, AI assistants, and tools, capturing the full context and
+// metadata of these conversations.
+//
+// Key features:
+// - Flexible metadata storage using generic key-value pairs
+// - Support for multi-modal content (text, images)
+// - Tool calls and responses representation
+// - Extensible model configuration
+// - Enumerated message roles for type safety
+//
+// This specification is designed to be adaptable to various language model
+// providers and use cases, allowing for easy serialization, storage, and
+// analysis of AI-assisted conversations.
+package lmhist.v1beta1;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/lmhist/spec/lmhist/v1beta1;lmhistv1beta1";
+
+// LMHist represents a complete conversation history with a language model.
+message LMHist {
+  // Version of the lmhist format, for future compatibility.
+  string version = 1;
+  // Metadata about the conversation.
+  Metadata metadata = 2;
+  // Configuration of the language model used.
+  ModelConfig model_config = 3;
+  // The sequence of messages in the conversation.
+  repeated Message messages = 4;
+}
+
+// Metadata contains information about the overall conversation.
+message Metadata {
+  // When the conversation took place.
+  google.protobuf.Timestamp timestamp = 1;
+  // An optional session ID to group multiple conversations together.
+  string session_id = 2;
+  // Additional key-value pairs for annotations.
+  map<string, string> annotations = 3;
+  // Additional key-value pairs for flexible labeling.
+  map<string, string> labels = 4;
+  // Additional metadata that doesn't fit into the other fields.
+  map<string, google.protobuf.Any> additional_metadata = 5;
+}
+
+// ModelConfig describes the configuration of the language model used.
+message ModelConfig {
+  // The provider of the language model (e.g., "openai", "anthropic", "google").
+  string vendor = 1;
+  // The specific model used (e.g., "gpt-4", "claude-2", "palm-2").
+  string name = 2;
+  // Temperature setting for the model.
+  float temperature = 3;
+  // Maximum number of tokens to generate.
+  int32 max_tokens = 4;
+
+  // TODO: Tool specifications.
+  // Additional metadata that doesn't fit into the other fields.
+  map<string, google.protobuf.Any> additional_config = 5;
+}
+
+// Message represents a single message in the conversation.
+message Message {
+  // The role of the message sender (e.g., "system", "human", "assistant").
+  string role = 1;
+  // The content of the message, which can be of different types.
+  repeated Content contents = 2;
+  // Metadata about the message.
+  map<string, google.protobuf.Any> metadata = 3;
+}
+
+// Content represents a piece of content in a message, which can be of different types.
+message Content {
+  // The content can be either text or image. More types can be added in the future.
+  oneof type {
+    TextContent text = 1;
+    ImageContent image = 2;
+    ToolCall tool_call = 3;
+    ToolResponse tool_response = 4;
+  }
+}
+
+// TextContent represents a text message.
+message TextContent {
+  // The text content of the message.
+  string text = 1;
+}
+
+// ImageContent represents an image in the conversation.
+message ImageContent {
+  // The URL of the image.
+  string url = 1;
+
+  // Alternative text description of the image.
+  string alt_text = 2;
+}
+
+// ToolCall represents a call to a tool.
+message ToolCall {
+  // A unique identifier for the tool call.
+  string tool_call_id = 1;
+  // The name of the tool being called.
+  string name = 2;
+  // The input parameters to the tool.
+  map<string, string> parameters = 3;
+}
+
+// ToolResponse represents the response from a tool.
+message ToolResponse {
+  // The unique identifier of the tool call that this response corresponds to.
+  string tool_call_id = 1;
+  // The name of the tool that responded.
+  string name = 2;
+  // The output of the tool.
+  string output = 3;
+}
+

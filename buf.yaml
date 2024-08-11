@@ -1,0 +1,13 @@
+version: v2
+modules:
+  - path: .
+    name: buf.build/lmhist/spec
+deps:
+  - buf.build/googleapis/googleapis
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT
+
